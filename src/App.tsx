@@ -35,7 +35,7 @@ const MAP_OPTIONS = [
 
 export default function App() {
   const [matches, setMatches] = useState<Match[]>(() => {
-    const saved = localStorage.getItem('feraclub_matches_v2');
+    const saved = localStorage.getItem('ferasclub_matches_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
@@ -76,7 +76,7 @@ export default function App() {
   const [newTime, setNewTime] = useState('21HS');
 
   useEffect(() => {
-    localStorage.setItem('feraclub_matches_v2', JSON.stringify(matches));
+    localStorage.setItem('ferasclub_matches_v2', JSON.stringify(matches));
   }, [matches]);
 
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -228,3 +228,283 @@ export default function App() {
       <main className="max-w-md mx-auto p-4 space-y-6">
         {isAdmin && (
           <button
+            onClick={() => setShowCreateModal(true)}
+            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 border border-orange-400/30 transition-all active:scale-98"
+          >
+            <Plus className="w-5 h-5" />
+            Criar Nova Operação
+          </button>
+        )}
+
+        {activeMatches.length === 0 ? (
+          <div className="text-center py-16 bg-[#16161c] rounded-2xl border border-gray-800 p-6">
+            <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <h3 className="text-white font-bold text-lg">Sem partidas abertas</h3>
+            <p className="text-gray-400 text-sm mt-1">O organizador ainda não criou nenhuma operação para hoje.</p>
+          </div>
+        ) : (
+          activeMatches.map(match => {
+            const count = confirmedCount(match);
+            const isFull = count >= 8;
+
+            return (
+              <div key={match.id} className="bg-[#16161c] rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
+                <div className="p-4 bg-gradient-to-r from-[#1c1c24] to-[#16161c] border-b border-gray-800 flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2 text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">
+                      <span>🔥 {match.game}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-gray-300">
+                        <MapPin className="w-3 h-3 text-orange-400" /> {match.mapName}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-black text-white">{match.title}</h2>
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                      <Clock className="w-3.5 h-3.5 text-orange-500" />
+                      Hoje, a partir das <span className="text-white font-bold">{match.time}</span>
+                    </p>
+                  </div>
+
+                  {isAdmin && (
+                    <button 
+                      onClick={() => deleteMatch(match.id)}
+                      className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg bg-gray-900/50"
+                      title="Apagar Operação"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-4 bg-[#121216]/50 border-b border-gray-800/60">
+                  <div className="bg-[#1a1a22] p-2.5 rounded-xl border border-gray-800">
+                    <span className="text-[10px] uppercase tracking-wider text-gray-400 block font-semibold">Jogadores</span>
+                    <span className="text-lg font-black text-white">{count}/8</span>
+                  </div>
+                  <div className="bg-[#1a1a22] p-2.5 rounded-xl border border-gray-800">
+                    <span className="text-[10px] uppercase tracking-wider text-gray-400 block font-semibold">Vagas</span>
+                    <span className={`text-lg font-black ${isFull ? 'text-red-500' : 'text-orange-500'}`}>
+                      {Math.max(0, 8 - count)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lista de operadores</span>
+                    <span className="text-[10px] bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono">4 × 4</span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {match.players.map(player => (
+                      <div 
+                        key={player.id}
+                        onClick={() => handleJoinSlot(match.id, player.id, false)}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                          player.confirmed 
+                            ? 'bg-[#1c2420] border-green-500/30 hover:border-green-500/60 text-white' 
+                            : 'bg-[#1a1a22] border-gray-800 hover:border-orange-500/40 text-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs ${
+                            player.confirmed ? 'bg-green-600/30 text-green-400' : 'bg-gray-800 text-gray-400'
+                          }`}>
+                            {player.id}
+                          </span>
+                          <span className={`font-medium text-sm ${player.confirmed ? 'text-white font-semibold' : 'italic text-gray-500'}`}>
+                            {player.name || 'Digitar seu nick'}
+                          </span>
+                        </div>
+
+                        {player.confirmed && <Check className="w-4 h-4 text-green-400" />}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-gray-800">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Observador</span>
+                    <div 
+                      onClick={() => handleJoinSlot(match.id, match.observer.id, true)}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                        match.observer.confirmed 
+                          ? 'bg-[#1c2420] border-green-500/30 hover:border-green-500/60 text-white' 
+                          : 'bg-[#1a1a22] border-gray-800 hover:border-orange-500/40 text-gray-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs bg-gray-800 text-gray-400">
+                          {match.observer.id}
+                        </span>
+                        <span className={`font-medium text-sm ${match.observer.confirmed ? 'text-white font-semibold' : 'italic text-gray-500'}`}>
+                          {match.observer.name ? `${match.observer.name} ${match.observer.timeInfo || ''}` : 'Adicionar Observador'}
+                        </span>
+                      </div>
+                      {match.observer.confirmed && <Check className="w-4 h-4 text-green-400" />}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 pt-0">
+                  <button
+                    onClick={() => copyWhatsAppList(match)}
+                    className="w-full bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-98"
+                  >
+                    {copiedMatchId === match.id ? (
+                      <>
+                        <Check className="w-5 h-5 text-green-400" />
+                        <span>Lista copiada com sucesso!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-5 h-5" />
+                        <span>Copiar Lista para WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </main>
+
+      {editingSlot && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white">
+              {editingSlot.isObserver ? 'Entrar como Observador' : `Vaga #${editingSlot.slotId}`}
+            </h3>
+            <p className="text-xs text-gray-400">Digite o seu nick exato para garantir o seu lugar na partida.</p>
+            
+            <input
+              type="text"
+              value={tempName}
+              onChange={(e) => setTempName(e.target.value)}
+              placeholder="Ex: FERA Nuke"
+              autoFocus
+              className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 font-medium"
+            />
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setEditingSlot(null)}
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-2.5 rounded-xl text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={savePlayerName}
+                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-orange-600/20"
+              >
+                Confirmar Nick
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAdminModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleAdminLogin} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-orange-500" />
+              Área Administrativa
+            </h3>
+            <p className="text-xs text-gray-400">Insira a senha de organizador do FERACLUB.</p>
+            
+            <input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              placeholder="Senha de acesso"
+              autoFocus
+              className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500"
+            />
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAdminModal(false)}
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-2.5 rounded-xl text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg"
+              >
+                Entrar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={createMatch} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Plus className="w-5 h-5 text-orange-500" />
+              Criar Nova Operação
+            </h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Título da Partida</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  required
+                  className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Mapa do Ghost Recon</label>
+                <select
+                  value={newMap}
+                  onChange={(e) => setNewMap(e.target.value)}
+                  className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-500"
+                >
+                  {MAP_OPTIONS.map(map => (
+                    <option key={map} value={map}>{map}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Horário</label>
+                <input
+                  type="text"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  placeholder="Ex: 21HS"
+                  required
+                  className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-2.5 rounded-xl text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-orange-600/20"
+              >
+                Criar Operação
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}

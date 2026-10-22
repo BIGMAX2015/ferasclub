@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Users, Plus, Share2, Check, Trash2, 
-  Clock, MapPin
+  Clock, MapPin, Edit3
 } from 'lucide-react';
 
 interface PlayerSlot {
@@ -71,7 +71,10 @@ export default function App() {
   const [tempName, setTempName] = useState('');
   const [copiedMatchId, setCopiedMatchId] = useState<string | null>(null);
 
+  // Estados para Criar/Editar Operação
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('Persona Breakpoint');
+  const [newGame, setNewGame] = useState('Ghost Recon Breakpoint');
   const [newMap, setNewMap] = useState(MAP_OPTIONS[0]);
   const [newTime, setNewTime] = useState('21HS');
 
@@ -142,27 +145,63 @@ export default function App() {
     setTempName('');
   };
 
-  const createMatch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newMatch: Match = {
-      id: Date.now().toString(),
-      title: newTitle,
-      game: 'Ghost Recon Breakpoint',
-      mapName: newMap,
-      date: 'Hoje',
-      time: newTime,
-      status: 'open',
-      players: Array.from({ length: 8 }, (_, i) => ({
-        id: i + 1,
-        name: '',
-        confirmed: false
-      })),
-      observer: { id: 9, name: '', confirmed: false }
-    };
-
-    setMatches([newMatch, ...matches]);
-    setShowCreateModal(false);
+  const openCreateModal = () => {
+    setEditingMatchId(null);
     setNewTitle('Persona Breakpoint');
+    setNewGame('Ghost Recon Breakpoint');
+    setNewMap(MAP_OPTIONS[0]);
+    setNewTime('21HS');
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = (match: Match) => {
+    setEditingMatchId(match.id);
+    setNewTitle(match.title);
+    setNewGame(match.game);
+    setNewMap(match.mapName);
+    setNewTime(match.time);
+    setShowCreateModal(true);
+  };
+
+  const handleSaveMatch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingMatchId) {
+      // Editar operação existente
+      setMatches(prev => prev.map(m => {
+        if (m.id === editingMatchId) {
+          return {
+            ...m,
+            title: newTitle,
+            game: newGame,
+            mapName: newMap,
+            time: newTime
+          };
+        }
+        return m;
+      }));
+    } else {
+      // Criar nova operação
+      const newMatch: Match = {
+        id: Date.now().toString(),
+        title: newTitle,
+        game: newGame,
+        mapName: newMap,
+        date: 'Hoje',
+        time: newTime,
+        status: 'open',
+        players: Array.from({ length: 8 }, (_, i) => ({
+          id: i + 1,
+          name: '',
+          confirmed: false
+        })),
+        observer: { id: 9, name: '', confirmed: false }
+      };
+      setMatches([newMatch, ...matches]);
+    }
+
+    setShowCreateModal(false);
+    setEditingMatchId(null);
   };
 
   const deleteMatch = (matchId: string) => {
@@ -175,7 +214,7 @@ export default function App() {
     const filledPlayers = match.players.map(p => `${p.id} ${p.name ? p.name + '✅' : ''}`).join('\n');
     const obsText = match.observer.name ? `\nObservador\n9 ${match.observer.name}✅ ${match.observer.timeInfo || ''}` : '';
     
-    const text = `🔥 ${match.title} 🔥\na PARTIR ✨ ${match.time} ✨\n🗺️ Mapa: ${match.mapName}\n\n${filledPlayers}${obsText}\n\n✨💥🔥 É FERA! 🔥💥✨`;
+    const text = `🔥 ${match.title} 🔥\na PARTIR ✨ ${match.time} ✨\n🗺️ Jogo: ${match.game}\n🗺️ Mapa: ${match.mapName}\n\n${filledPlayers}${obsText}\n\n✨💥🔥 É FERA! 🔥💥✨`;
 
     navigator.clipboard.writeText(text);
     setCopiedMatchId(match.id);
@@ -228,7 +267,7 @@ export default function App() {
       <main className="max-w-md mx-auto p-4 space-y-6">
         {isAdmin && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={openCreateModal}
             className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 border border-orange-400/30 transition-all active:scale-98"
           >
             <Plus className="w-5 h-5" />
@@ -266,13 +305,22 @@ export default function App() {
                   </div>
 
                   {isAdmin && (
-                    <button 
-                      onClick={() => deleteMatch(match.id)}
-                      className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg bg-gray-900/50"
-                      title="Apagar Operação"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => openEditModal(match)}
+                        className="text-gray-400 hover:text-orange-400 p-1.5 rounded-lg bg-gray-900/50"
+                        title="Editar Operação"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => deleteMatch(match.id)}
+                        className="text-gray-500 hover:text-red-400 p-1.5 rounded-lg bg-gray-900/50"
+                        title="Apagar Operação"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -443,15 +491,15 @@ export default function App() {
 
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={createMatch} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+          <form onSubmit={handleSaveMatch} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-orange-500" />
-              Criar Nova Operação
+              {editingMatchId ? 'Editar Operação' : 'Criar Nova Operação'}
             </h3>
             
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-gray-400 block mb-1">Título da Partida</label>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Nome / Título da Partida</label>
                 <input
                   type="text"
                   value={newTitle}
@@ -462,7 +510,18 @@ export default function App() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-400 block mb-1">Mapa do Ghost Recon</label>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Nome do Jogo</label>
+                <input
+                  type="text"
+                  value={newGame}
+                  onChange={(e) => setNewGame(e.target.value)}
+                  required
+                  className="w-full bg-[#0d0d0f] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-400 block mb-1">Mapa</label>
                 <select
                   value={newMap}
                   onChange={(e) => setNewMap(e.target.value)}
@@ -499,7 +558,7 @@ export default function App() {
                 type="submit"
                 className="flex-1 bg-orange-600 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-orange-600/20"
               >
-                Criar Operação
+                {editingMatchId ? 'Salvar Alterações' : 'Criar Operação'}
               </button>
             </div>
           </form>

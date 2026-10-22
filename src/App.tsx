@@ -35,7 +35,7 @@ const MAP_OPTIONS = [
 
 export default function App() {
   const [matches, setMatches] = useState<Match[]>(() => {
-    const saved = localStorage.getItem('ferasclub_matches_v2');
+    const saved = localStorage.getItem('feraclub_matches_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
@@ -76,7 +76,7 @@ export default function App() {
   const [newTime, setNewTime] = useState('21HS');
 
   useEffect(() => {
-    localStorage.setItem('ferasclub_matches_v2', JSON.stringify(matches));
+    localStorage.setItem('feraclub_matches_v2', JSON.stringify(matches));
   }, [matches]);
 
   const handleAdminLogin = (e: React.FormEvent) => {
@@ -172,7 +172,59 @@ export default function App() {
   };
 
   const copyWhatsAppList = (match: Match) => {
-    const filledPlayers = match.players.map(p => `${p.id}${p.name ? p.name + '✅' : ''}`).join('\n');
-    const obsText = match.observer.name ? `\nObservador\n9 ${match.observer.name}✅${match.observer.timeInfo || ''}` : '';
+    const filledPlayers = match.players.map(p => `${p.id} ${p.name ? p.name + '✅' : ''}`).join('\n');
+    const obsText = match.observer.name ? `\nObservador\n9 ${match.observer.name}✅ ${match.observer.timeInfo || ''}` : '';
     
-    const text = `🔥
+    const text = `🔥 ${match.title} 🔥\na PARTIR ✨ ${match.time} ✨\n🗺️ Mapa: ${match.mapName}\n\n${filledPlayers}${obsText}\n\n✨💥🔥 É FERA! 🔥💥✨`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedMatchId(match.id);
+    setTimeout(() => setCopiedMatchId(null), 2500);
+  };
+
+  const activeMatches = matches.filter(m => m.status !== 'finished');
+  const confirmedCount = (match: Match) => match.players.filter(p => p.confirmed).length;
+
+  return (
+    <div className="min-h-screen bg-[#0d0d0f] text-gray-100 font-sans pb-12">
+      <header className="sticky top-0 z-30 bg-[#121216]/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="bg-orange-600/20 p-2 rounded-lg border border-orange-500/40 text-orange-500">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-wider text-white flex items-center gap-1.5">
+              FERACLUB
+              <span className="text-xs bg-orange-600 text-white px-1.5 py-0.5 rounded font-mono">PWA</span>
+            </h1>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest">Gaming Community</p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/30 px-2.5 py-1 rounded-full text-xs text-green-400 font-medium">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            ONLINE
+          </div>
+
+          {isAdmin ? (
+            <button 
+              onClick={() => setIsAdmin(false)}
+              className="text-xs bg-red-600/20 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-lg font-medium"
+            >
+              Sair Admin
+            </button>
+          ) : (
+            <button 
+              onClick={() => setShowAdminModal(true)}
+              className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-2.5 py-1 rounded-lg border border-gray-700"
+            >
+              Admin
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto p-4 space-y-6">
+        {isAdmin && (
+          <button

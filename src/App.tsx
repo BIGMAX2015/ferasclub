@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Shield, Users, Plus, Share2, Copy, Check, Trash2, 
-  Clock, MapPin, AlertCircle, LogOut, RefreshCw, Smartphone
+  Shield, Users, Plus, Share2, Check, Trash2, 
+  Clock, MapPin
 } from 'lucide-react';
 
 interface PlayerSlot {
@@ -71,7 +71,6 @@ export default function App() {
   const [tempName, setTempName] = useState('');
   const [copiedMatchId, setCopiedMatchId] = useState<string | null>(null);
 
-  // New Match Form State
   const [newTitle, setNewTitle] = useState('Persona Breakpoint');
   const [newMap, setNewMap] = useState(MAP_OPTIONS[0]);
   const [newTime, setNewTime] = useState('21HS');
@@ -188,7 +187,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0d0d0f] text-gray-100 font-sans pb-12">
-      {/* Header */}
       <header className="sticky top-0 z-30 bg-[#121216]/95 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="bg-orange-600/20 p-2 rounded-lg border border-orange-500/40 text-orange-500">
@@ -227,10 +225,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-md mx-auto p-4 space-y-6">
-        
-        {/* Admin Create Button */}
         {isAdmin && (
           <button
             onClick={() => setShowCreateModal(true)}
@@ -241,7 +236,6 @@ export default function App() {
           </button>
         )}
 
-        {/* Matches Feed */}
         {activeMatches.length === 0 ? (
           <div className="text-center py-16 bg-[#16161c] rounded-2xl border border-gray-800 p-6">
             <Users className="w-12 h-12 text-gray-600 mx-auto mb-3" />
@@ -255,8 +249,6 @@ export default function App() {
 
             return (
               <div key={match.id} className="bg-[#16161c] rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-                
-                {/* Match Header */}
                 <div className="p-4 bg-gradient-to-r from-[#1c1c24] to-[#16161c] border-b border-gray-800 flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">
@@ -284,7 +276,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Status Badges */}
                 <div className="grid grid-cols-2 gap-2 p-4 bg-[#121216]/50 border-b border-gray-800/60">
                   <div className="bg-[#1a1a22] p-2.5 rounded-xl border border-gray-800">
                     <span className="text-[10px] uppercase tracking-wider text-gray-400 block font-semibold">Jogadores</span>
@@ -298,7 +289,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Operator List (1 to 8) */}
                 <div className="p-4 space-y-2">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lista de operadores</span>
@@ -327,14 +317,11 @@ export default function App() {
                           </span>
                         </div>
 
-                        {player.confirmed && (
-                          <Check className="w-4 h-4 text-green-400" />
-                        )}
+                        {player.confirmed && <Check className="w-4 h-4 text-green-400" />}
                       </div>
                     ))}
                   </div>
 
-                  {/* Observer Section */}
                   <div className="mt-4 pt-3 border-t border-gray-800">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Observador</span>
                     <div 
@@ -358,7 +345,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* WhatsApp Share Button */}
                 <div className="p-4 pt-0">
                   <button
                     onClick={() => copyWhatsAppList(match)}
@@ -377,18 +363,15 @@ export default function App() {
                     )}
                   </button>
                 </div>
-
               </div>
             );
           })
         )}
-
       </main>
 
-      {/* Edit Nickname Modal */}
       {editingSlot && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-white">
               {editingSlot.isObserver ? 'Entrar como Observador' : `Vaga #${editingSlot.slotId}`}
             </h3>
@@ -421,7 +404,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Admin Login Modal */}
       {showAdminModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <form onSubmit={handleAdminLogin} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
@@ -459,7 +441,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Create Match Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <form onSubmit={createMatch} className="bg-[#16161c] border border-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
@@ -524,7 +505,6 @@ export default function App() {
           </form>
         </div>
       )}
-
     </div>
   );
 }

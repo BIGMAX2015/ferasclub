@@ -71,7 +71,6 @@ export default function App() {
   const [tempName, setTempName] = useState('');
   const [copiedMatchId, setCopiedMatchId] = useState<string | null>(null);
 
-  // Estados para Criar/Editar Operação
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('Persona Breakpoint');
   const [newGame, setNewGame] = useState('Ghost Recon Breakpoint');
@@ -167,7 +166,6 @@ export default function App() {
     e.preventDefault();
 
     if (editingMatchId) {
-      // Editar operação existente
       setMatches(prev => prev.map(m => {
         if (m.id === editingMatchId) {
           return {
@@ -181,7 +179,6 @@ export default function App() {
         return m;
       }));
     } else {
-      // Criar nova operação
       const newMatch: Match = {
         id: Date.now().toString(),
         title: newTitle,
@@ -210,11 +207,12 @@ export default function App() {
     }
   };
 
+  // Mensagem personalizada para o WhatsApp
   const copyWhatsAppList = (match: Match) => {
     const filledPlayers = match.players.map(p => `${p.id} ${p.name ? p.name + '✅' : ''}`).join('\n');
     const obsText = match.observer.name ? `\nObservador\n9 ${match.observer.name}✅ ${match.observer.timeInfo || ''}` : '';
     
-    const text = `🔥 ${match.title} 🔥\na PARTIR ✨ ${match.time} ✨\n🗺️ Jogo: ${match.game}\n🗺️ Mapa: ${match.mapName}\n\n${filledPlayers}${obsText}\n\n✨💥🔥 É FERA! 🔥💥✨`;
+    const text = `🚨 GALERA, VAI ROLAR PERSONALIZADA HOJE! 🚨\n\n🔥 ${match.title} 🔥\nÀs ✨ ${match.time} ✨\n🗺️ Jogo: ${match.game}\n🗺️ Mapa: ${match.mapName}\n\nGaranta sua vaga na lista:\n\n${filledPlayers}${obsText}\n\n✨💥🔥 É FERA! 🔥💥✨`;
 
     navigator.clipboard.writeText(text);
     setCopiedMatchId(match.id);
